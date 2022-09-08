@@ -10,10 +10,13 @@ class NetworkRepository @Inject constructor(
     private val recipeDao: RecipeDao,
     private val apiService: ApiService
 ) {
-    val flow = getRecipeData({ recipeDao.getAllRecipe() }, {
+    val flow = getRecipeData({
+        recipeDao.getAllRecipe()
+    }, {
         apiService.search(token, 1, "")
     }, {
-       recipeDao.insertRecipeInDb(it.recipes)
+        recipeDao.insertRecipeInDb(it.recipes)
     })
+
 
 }

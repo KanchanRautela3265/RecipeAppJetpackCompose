@@ -42,27 +42,40 @@ import com.compose.ui.util.NetworkResult
 @Composable
 fun Recipe(navController: NavController, viewModel: RecipeViewModel) {
 
-//    val itemList = remember {
-//        mutableStateOf<List<RecipeDto>>(listOf())
-//    }
+    val itemList = remember {
+        mutableStateOf<List<RecipeDto>>(listOf())
+    }
 
     val selectedItem = remember {
         mutableStateOf<RecipeDto?>(null)
     }
 
+    val progressBarState = remember {
+        mutableStateOf<Boolean?>(null)
+    }
+
     selectedItem.value = viewModel.selectedRecipe.value
-//    Log.d("main", "Recipe: ${selectedItem.value}")
-    when (viewModel.responseObj.value) {
+
+    when (val response = viewModel.responseObj.value) {
         is NetworkResult.Loading -> {
-//         ProgressBar(isLoading = true)
+            response.data?.let {
+                itemList.value = it
+                progressBarState.value = false
+            } ?: run {
+                progressBarState.value = true
+            }
         }
         is NetworkResult.Success -> {
-//            ProgressBar(isLoading = false)
-//            itemList.value = (viewModel.responseObj.value as NetworkResult.Success<RecipeSearchResponse>).data!!.recipes
+            response.data?.let {
+                itemList.value = it
+                progressBarState.value = false
+            }
         }
         is NetworkResult.Error -> {
-//            ProgressBar(isLoading = false)
-
+            response.data?.let {
+                itemList.value = it
+                progressBarState.value = false
+            }
         }
     }
     if (selectedItem.value != null) {
@@ -102,8 +115,8 @@ fun Recipe(navController: NavController, viewModel: RecipeViewModel) {
                 }
             }
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
-                ProgressBar(viewModel = viewModel)
-                RecipeList(null, viewModel, navController)
+                ProgressBar(progressBarState)
+                RecipeList(itemList, viewModel, navController)
             }
         }
     }
@@ -111,16 +124,16 @@ fun Recipe(navController: NavController, viewModel: RecipeViewModel) {
 
 
 @Composable
-fun ProgressBar(viewModel: RecipeViewModel) {
-//    val state by remember {
-//        mutableStateOf(viewModel.mRecipeList.value.isNotEmpty())
-//    }
-//    Box(
-//        modifier = Modifier.height(if (!state) 80.dp else 0.dp),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        CircularProgressIndicator(color = Color.Black)
-//    }
+fun ProgressBar(state:State<Boolean?>) {
+    Log.e("state","${state.value}")
+    state.value?.let {
+        Box(
+            modifier = Modifier.height(if (it) 80.dp else 0.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.Black)
+        }
+    }
 }
 
 @Composable
@@ -158,8 +171,8 @@ fun RecipeList(
     navController: NavController
 ) {
     LazyColumn(contentPadding = PaddingValues(10.dp)) {
-        viewModel.responseObj.value?.data?.let {
-            items(it.recipes) { recipeDto ->
+        if (itemList != null) {
+            items(itemList.value) { recipeDto ->
                 RecipeItem(viewModel, recipeDto) {
                     navController.navigate("recipe_details")
                     viewModel.setData(recipeDto)

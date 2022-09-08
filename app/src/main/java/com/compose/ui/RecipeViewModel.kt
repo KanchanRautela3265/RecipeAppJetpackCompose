@@ -1,5 +1,6 @@
 package com.compose.ui
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +25,8 @@ class RecipeViewModel @Inject constructor(
     private val recipeList = mutableStateOf<NetworkResult<List<RecipeDto>>?>(null)
     val selectedRecipe = mutableStateOf<RecipeDto?>(null)
     val mRecipeList:State<NetworkResult<List<RecipeDto>>?> = recipeList
-    val responseObj : MutableState<NetworkResult<RecipeSearchResponse>?> = mutableStateOf(null)
+    val responseObj  = mutableStateOf<NetworkResult<List<RecipeDto>>?>(null)
+
     init {
      search()
     }
@@ -38,7 +40,6 @@ class RecipeViewModel @Inject constructor(
 
 
     private fun search(){
-        responseObj.value = NetworkResult.Loading()
         viewModelScope.launch {
 //            try {
 //                val response =   apiService.search(token,1,"")
@@ -51,7 +52,7 @@ class RecipeViewModel @Inject constructor(
 //            }
 
             networkRepository.flow.collect {
-                recipeList.value = it
+                responseObj.value = it
             }
 
         }
